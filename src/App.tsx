@@ -1,24 +1,25 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import './assets/stylesheets/app.css';
+
+import OverworkedElvesForm from './components/Form';
+
+// import { getLocations } from './data/population.js'
+interface AppProps {
+  children: React.ReactNode; // best, accepts everything (see edge case below)
+  // functionChildren: (name: string) => React.ReactNode; // recommended function as a child render prop type
+  // style?: React.CSSProperties; // to pass through style props
+  // onChange?: React.FormEventHandler<HTMLInputElement>; // form events! the generic parameter is the type of event.target
+};
+
+// const test = getLocations();
+// console.log(test)
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
       </header>
+      <OverworkedElvesForm></OverworkedElvesForm>
     </div>
   );
 }
