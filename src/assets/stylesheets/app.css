@@ -1,5 +1,8 @@
 .App {
-  text-align: center;
+  background-image: url('../images/kristaps-grundsteins-wvIwFiX7UuM-unsplash.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 100vh;
 }
 
 .App-logo {
@@ -14,14 +17,16 @@
 }
 
 .App-header {
-  background-color: #282c34;
-  /* min-height: 100vh; */
-  display: flex;
-  flex-direction: column;
+  /* background-color: rgba(0, 0, 0, 0.5); */
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  display: flex;
+  flex-direction: row;
+  font-family: 'Oswald', sans-serif;
+  font-size: calc(14px + 2vmin);
+  font-weight: bolder;
+  justify-content: flex-start;
+  padding: 2px 10px;
+  /* color: white; */
 }
 
 .App-link {

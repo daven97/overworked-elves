@@ -2,8 +2,6 @@ import React from 'react';
 import './assets/stylesheets/app.css';
 
 import OverworkedElvesForm from './components/Form';
-
-// import { getLocations } from './data/population.js'
 interface AppProps {
   children: React.ReactNode; // best, accepts everything (see edge case below)
   // functionChildren: (name: string) => React.ReactNode; // recommended function as a child render prop type
@@ -18,6 +16,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
+        #OverworkedElves {/* TODO: Make link  */}
+        {/* TODO: Add Menu */}
       </header>
       <OverworkedElvesForm></OverworkedElvesForm>
     </div>

@@ -1,16 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-import { Form as FormikForm, FormikErrors, FormikProps, withFormik } from 'formik';
+import { Form as FormikForm, FormikErrors, FormikHandlers, FormikProps, withFormik } from 'formik';
 import Form from 'react-bootstrap/Form';
 import * as Yup from 'yup';
 
+import calculateHours from '../data/hoursCalculation';
+
 import '../assets/stylesheets/form.css';
 
-interface FormValues {
-  hoursPerToy: number;
-  numElves: number;
-  toysPerChild: number;
-}
+import { FormValues } from '../shared/types';
 
 interface FormGroupParams {
   fieldName: keyof FormValues;
@@ -24,7 +22,7 @@ interface FormGroupParams {
 //   toysPerChild: 'number'
 // };
 
-const getFieldNameDisplayString = (fieldName: keyof FormValues) => {
+const getFieldNameDisplayString = (fieldName: keyof FormValues): string => {
   switch (fieldName) {
     case 'hoursPerToy':
       return 'Hours per Toy';
@@ -35,26 +33,32 @@ const getFieldNameDisplayString = (fieldName: keyof FormValues) => {
   }
 }
 
-const FormGroup = ({ fieldName, inputType, formProps }: FormGroupParams) => {
+const FormGroup = ({ fieldName, inputType, formProps }: FormGroupParams): JSX.Element => {
   const { handleBlur, handleChange, values, touched, errors } = formProps;
+  console.log(errors);
   const field_errors = errors[fieldName];
 
-  return (<Form.Group controlId="formHoursPerToy" >
-    <Form.Label>{getFieldNameDisplayString(fieldName)}</Form.Label>
-    <Form.Control
-      name={fieldName}
-      type={inputType}
-      onBlur={handleBlur}
-      onChange={handleChange}
-      value={values[fieldName]}
-    />
-    {touched[fieldName] && field_errors && <Form.Control.Feedback className="form-field-error" type="invalid">{field_errors}</Form.Control.Feedback>}
-  </Form.Group>
-  );
-}
+  // const debounceHandleChange = (): FormikHandlers['handleChange'] {
 
-const InnerForm = (props: FormikProps<FormValues>) => {
-  const { handleSubmit, isSubmitting } = props;
+  // }
+
+  return (
+    <Form.Group controlId="formHoursPerToy" >
+      <Form.Label>{getFieldNameDisplayString(fieldName)}</Form.Label>
+      <Form.Control
+        name={fieldName}
+        type={inputType}
+        onBlur={handleBlur}
+        onChange={handleChange}
+        value={values[fieldName]}
+      />
+      {touched[fieldName] && field_errors && <Form.Control.Feedback className="form-field-error" type="invalid">{field_errors}</Form.Control.Feedback>}
+    </Form.Group>
+  );
+};
+
+const InnerForm = (props: FormikProps<FormValues>): JSX.Element => {
+  const { handleSubmit } = props;
   return (
     <FormikForm>
       {/* We have to use the 'as' prop becuase rendering a form within a form is considered invalid html */}
@@ -64,9 +68,9 @@ const InnerForm = (props: FormikProps<FormValues>) => {
         <FormGroup fieldName="toysPerChild" inputType="number" formProps={props} />
 
 
-        <button type="submit" disabled={isSubmitting}>
+        {/* <button type="submit" disabled={isSubmitting}>
           Submit
-        </button>
+        </button> */}
       </Form>
     </FormikForm>
   );
@@ -77,6 +81,9 @@ interface FormProps {
   initialNumElves: number;
   initialHoursPerToy: number;
   initialToysPerChild: number;
+  setHoursPerDay: React.Dispatch<React.SetStateAction<number>>;
+  setNumDays: React.Dispatch<React.SetStateAction<number>>;
+  setTotalHours: React.Dispatch<React.SetStateAction<number>>;
 }
 
 // Wrap our form with the withFormik HoC
@@ -118,17 +125,69 @@ const FormInstance = withFormik<FormProps, FormValues>({
 
     return errors;
   },
+  handleSubmit: (values, { props, setSubmitting }) => {
+    const { setHoursPerDay, setNumDays } = props;
+    const { hoursPerDay: newHoursPerDay, numDays: newNumDays } = calculateHours(values);
 
-  handleSubmit: values => {
-    // do submitting things
+    setHoursPerDay(newHoursPerDay);
+    setNumDays(newNumDays);
+    setSubmitting(false);
   },
 })(InnerForm);
 
-const OverworkedElvesForm = () => (
-  <div>
-    <h1>Overworked Elves Calculator</h1>
-    <FormInstance initialNumElves={50000} initialHoursPerToy={8} initialToysPerChild={2} />
-  </div>
-);
+const OverworkedElvesForm = (): JSX.Element => {
+  const initialValues: FormValues = {
+    numElves: 5000000,
+    hoursPerToy: 3,
+    toysPerChild: 2
+  };
+  const { hoursPerDay: initialHoursPerDay, numDays: initialNumDays, totalHours: initialTotalHours } = calculateHours(initialValues);
+  const [hoursPerDay, setHoursPerDay] = useState(initialHoursPerDay);
+  const [numDays, setNumDays] = useState(initialNumDays);
+  const [totalHours, setTotalHours] = useState(initialTotalHours);
+
+  return (
+    <div className="content-wrapper">
+      {/* TODO: Better name for this class */}
+      <div className="header-text">
+        <h2>
+          Santa's elves are forced to work for
+          {/* Each elf only needs to work for */}
+          <strong className="text-danger">
+            &nbsp;{+hoursPerDay.toFixed(2)}&nbsp;
+          </strong>
+          hours each day for
+          {/* hours per day for */}
+          <strong className="text-danger">
+            &nbsp;{numDays}&nbsp;
+          </strong>
+          days each year.
+          {/* days this year! */}
+        </h2>
+        <h2>
+          That's only
+          <strong className="text-danger">
+            &nbsp;{hoursPerDay * numDays}&nbsp;
+          </strong>
+          total hours per elf! (
+          <strong className="text-danger">
+            {totalHours}
+          </strong> total hours)
+        </h2>
+      </div>
+      <div className="form-container">
+        <FormInstance
+          initialNumElves={initialValues.numElves}
+          initialHoursPerToy={initialValues.hoursPerToy}
+          initialToysPerChild={initialValues.toysPerChild}
+          setHoursPerDay={setHoursPerDay}
+          setNumDays={setNumDays}
+          setTotalHours={setTotalHours}
+        />
+        <br />
+      </div>
+    </div>
+  );
+};
 
 export default OverworkedElvesForm;
