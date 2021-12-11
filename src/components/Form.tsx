@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { Form as FormikForm, FormikErrors, FormikHandlers, FormikProps, withFormik } from 'formik';
+import { Form as FormikForm, FormikErrors, FormikHandlers, FormikProps, useFormikContext, withFormik } from 'formik';
 import Form from 'react-bootstrap/Form';
 import * as Yup from 'yup';
+
+import debounce from 'just-debounce-it';
 
 import calculateHours from '../data/hoursCalculation';
 
 import '../assets/stylesheets/form.css';
 
 import { FormValues } from '../shared/types';
+import classNames from 'classnames';
+import calculatePopulationDensity from '../data/densityCalculation';
 
 interface FormGroupParams {
   fieldName: keyof FormValues;
@@ -35,15 +39,11 @@ const getFieldNameDisplayString = (fieldName: keyof FormValues): string => {
 
 const FormGroup = ({ fieldName, inputType, formProps }: FormGroupParams): JSX.Element => {
   const { handleBlur, handleChange, values, touched, errors } = formProps;
-  console.log(errors);
   const field_errors = errors[fieldName];
-
-  // const debounceHandleChange = (): FormikHandlers['handleChange'] {
-
-  // }
+  const displayErrors = touched[fieldName] && !!field_errors;
 
   return (
-    <Form.Group controlId="formHoursPerToy" >
+    <Form.Group controlId="formHoursPerToy" className="form-group">
       <Form.Label>{getFieldNameDisplayString(fieldName)}</Form.Label>
       <Form.Control
         name={fieldName}
@@ -52,13 +52,23 @@ const FormGroup = ({ fieldName, inputType, formProps }: FormGroupParams): JSX.El
         onChange={handleChange}
         value={values[fieldName]}
       />
-      {touched[fieldName] && field_errors && <Form.Control.Feedback className="form-field-error" type="invalid">{field_errors}</Form.Control.Feedback>}
+      <Form.Control.Feedback className={classNames('form-field-error', 'text-danger', { 'invisible': !displayErrors })} type="invalid">{field_errors || "blank"}</Form.Control.Feedback>
     </Form.Group>
   );
 };
 
 const InnerForm = (props: FormikProps<FormValues>): JSX.Element => {
   const { handleSubmit } = props;
+  const { values, submitForm } = useFormikContext();
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const debounceSubmitForm = useCallback(debounce(() => submitForm(), 300), [submitForm]);
+
+  // Automatically submit the form 
+  useEffect(() => {
+    debounceSubmitForm();
+  }, [values, debounceSubmitForm]);
+
   return (
     <FormikForm>
       {/* We have to use the 'as' prop becuase rendering a form within a form is considered invalid html */}
@@ -83,6 +93,7 @@ interface FormProps {
   initialToysPerChild: number;
   setHoursPerDay: React.Dispatch<React.SetStateAction<number>>;
   setNumDays: React.Dispatch<React.SetStateAction<number>>;
+  setPopulationDensity: React.Dispatch<React.SetStateAction<number>>;
   setTotalHours: React.Dispatch<React.SetStateAction<number>>;
 }
 
@@ -103,7 +114,7 @@ const FormInstance = withFormik<FormProps, FormValues>({
 
     // hoursPerToy
     if (!values.hoursPerToy) {
-      errors.hoursPerToy = 'Required';
+      errors.hoursPerToy = 'Please enter a number';
     } else if (values.hoursPerToy <= 0) {
       errors.hoursPerToy = 'Must be a positive number';
     }
@@ -126,11 +137,13 @@ const FormInstance = withFormik<FormProps, FormValues>({
     return errors;
   },
   handleSubmit: (values, { props, setSubmitting }) => {
-    const { setHoursPerDay, setNumDays } = props;
+    const { setHoursPerDay, setNumDays, setPopulationDensity } = props;
     const { hoursPerDay: newHoursPerDay, numDays: newNumDays } = calculateHours(values);
+    const populationDensity = calculatePopulationDensity(values.numElves);
 
     setHoursPerDay(newHoursPerDay);
     setNumDays(newNumDays);
+    setPopulationDensity(populationDensity);
     setSubmitting(false);
   },
 })(InnerForm);
@@ -142,9 +155,12 @@ const OverworkedElvesForm = (): JSX.Element => {
     toysPerChild: 2
   };
   const { hoursPerDay: initialHoursPerDay, numDays: initialNumDays, totalHours: initialTotalHours } = calculateHours(initialValues);
+  const initialPopulationDensity = calculatePopulationDensity(initialValues.numElves);
+
   const [hoursPerDay, setHoursPerDay] = useState(initialHoursPerDay);
   const [numDays, setNumDays] = useState(initialNumDays);
   const [totalHours, setTotalHours] = useState(initialTotalHours);
+  const [populationDensity, setPopulationDensity] = useState(initialPopulationDensity);
 
   return (
     <div className="content-wrapper">
@@ -162,7 +178,14 @@ const OverworkedElvesForm = (): JSX.Element => {
             &nbsp;{numDays}&nbsp;
           </strong>
           days each year.
+        </h2>
+        <h2>
+          They live with a population density of
           {/* days this year! */}
+          <strong className="text-danger">
+            &nbsp;{+populationDensity.toFixed(2)}&nbsp;
+          </strong>
+          elves/mi².
         </h2>
         <h2>
           That's only
@@ -175,16 +198,20 @@ const OverworkedElvesForm = (): JSX.Element => {
           </strong> total hours)
         </h2>
       </div>
-      <div className="form-container">
-        <FormInstance
-          initialNumElves={initialValues.numElves}
-          initialHoursPerToy={initialValues.hoursPerToy}
-          initialToysPerChild={initialValues.toysPerChild}
-          setHoursPerDay={setHoursPerDay}
-          setNumDays={setNumDays}
-          setTotalHours={setTotalHours}
-        />
-        <br />
+      {/* TODO: Better classname here */}
+      <div className="form-wrapper">
+        <div className="form-container">
+          <FormInstance
+            initialNumElves={initialValues.numElves}
+            initialHoursPerToy={initialValues.hoursPerToy}
+            initialToysPerChild={initialValues.toysPerChild}
+            setHoursPerDay={setHoursPerDay}
+            setNumDays={setNumDays}
+            setPopulationDensity={setPopulationDensity}
+            setTotalHours={setTotalHours}
+          />
+          <br />
+        </div>
       </div>
     </div>
   );

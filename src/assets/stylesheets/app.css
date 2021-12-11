@@ -2,6 +2,8 @@
   background-image: url('../images/kristaps-grundsteins-wvIwFiX7UuM-unsplash.jpg');
   background-repeat: no-repeat;
   background-size: cover;
+  display: flex;
+  flex-direction: column;
   height: 100vh;
 }
 

@@ -1,10 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200&display=swap');
 
 .content-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  justify-content: space-around;
+  display: grid;
+  flex-grow: 1;
+  grid-template-rows: 1fr 3fr;
 }
 
 .header-text h2 {
@@ -16,19 +15,32 @@
   align-items: center;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   /* margin-bottom: 15%; */
 }
 
+.form-group:not(:last-child) {
+  margin-bottom: 20px;
+}
+
 .form-container {
-  background-color: rgba(0, 0, 0, 0.5);
+  /* background-color: rgba(0, 0, 0, 0.5); */
+  background-color: rgba(0, 0, 0, 0.75);
   border-radius: 10px;
   color: white;
   margin-left: 25%;
   margin-right: 25%;
+  margin-top: 5%;
   padding: 5%;
-
 }
 
-.form-field-error {
+/* .form-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+} */
+
+.form-field-error.invalid-feedback {
   display: block;
+  min-height: 1em;
 }
