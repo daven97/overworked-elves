@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Form as FormikForm, FormikErrors, FormikHandlers, FormikProps, useFormikContext, withFormik } from 'formik';
+import { Form as FormikForm, FormikErrors, FormikProps, useFormikContext, withFormik } from 'formik';
 import Form from 'react-bootstrap/Form';
 import * as Yup from 'yup';
 
@@ -13,12 +13,14 @@ import '../assets/stylesheets/form.css';
 import { FormValues } from '../shared/types';
 import classNames from 'classnames';
 import calculatePopulationDensity from '../data/densityCalculation';
+import NumDisplay from './NumDisplay';
 
 interface FormGroupParams {
   fieldName: keyof FormValues;
   formProps: FormikProps<FormValues>;
-  inputType: 'text' | 'number';
-}
+  inputType: 'text' | 'number' | 'select';
+  selectValues?: string[];
+};
 
 // const formValueInputTypeMapping =  {
 //   numElves: 'number',
@@ -35,9 +37,13 @@ const getFieldNameDisplayString = (fieldName: keyof FormValues): string => {
     case 'toysPerChild':
       return 'Toys per Child';
   }
-}
+};
 
-const FormGroup = ({ fieldName, inputType, formProps }: FormGroupParams): JSX.Element => {
+// const FormControl = ({ }): JSX.Element => {
+
+// };
+
+const FormGroup = ({ fieldName, inputType, formProps, selectValues }: FormGroupParams): JSX.Element => {
   const { handleBlur, handleChange, values, touched, errors } = formProps;
   const field_errors = errors[fieldName];
   const displayErrors = touched[fieldName] && !!field_errors;
@@ -76,17 +82,11 @@ const InnerForm = (props: FormikProps<FormValues>): JSX.Element => {
         <FormGroup fieldName="hoursPerToy" inputType="number" formProps={props} />
         <FormGroup fieldName="numElves" inputType="number" formProps={props} />
         <FormGroup fieldName="toysPerChild" inputType="number" formProps={props} />
-
-
-        {/* <button type="submit" disabled={isSubmitting}>
-          Submit
-        </button> */}
       </Form>
     </FormikForm>
   );
 };
 
-// The type of props MyForm receives
 interface FormProps {
   initialNumElves: number;
   initialHoursPerToy: number;
@@ -150,7 +150,7 @@ const FormInstance = withFormik<FormProps, FormValues>({
 
 const OverworkedElvesForm = (): JSX.Element => {
   const initialValues: FormValues = {
-    numElves: 5000000,
+    numElves: 5_000_000,
     hoursPerToy: 3,
     toysPerChild: 2
   };
@@ -162,6 +162,8 @@ const OverworkedElvesForm = (): JSX.Element => {
   const [totalHours, setTotalHours] = useState(initialTotalHours);
   const [populationDensity, setPopulationDensity] = useState(initialPopulationDensity);
 
+  const hoursPerDayThresholdValues = { thresholdValue: 8, secondaryThresholdValue: 24 };
+
   return (
     <div className="content-wrapper">
       {/* TODO: Better name for this class */}
@@ -169,33 +171,24 @@ const OverworkedElvesForm = (): JSX.Element => {
         <h2>
           Santa's elves are forced to work for
           {/* Each elf only needs to work for */}
-          <strong className="text-danger">
-            &nbsp;{+hoursPerDay.toFixed(2)}&nbsp;
-          </strong>
+          <NumDisplay value={hoursPerDay} thresholdValues={hoursPerDayThresholdValues} />
           hours each day for
           {/* hours per day for */}
-          <strong className="text-danger">
-            &nbsp;{numDays}&nbsp;
-          </strong>
+          <NumDisplay value={numDays} />
           days each year.
         </h2>
         <h2>
           They live with a population density of
           {/* days this year! */}
-          <strong className="text-danger">
-            &nbsp;{+populationDensity.toFixed(2)}&nbsp;
-          </strong>
+          <NumDisplay value={populationDensity} />
           elves/mi².
         </h2>
         <h2>
           That's only
-          <strong className="text-danger">
-            &nbsp;{hoursPerDay * numDays}&nbsp;
-          </strong>
+          <NumDisplay value={hoursPerDay * numDays} />
           total hours per elf! (
-          <strong className="text-danger">
-            {totalHours}
-          </strong> total hours)
+          <NumDisplay value={totalHours} spacePadded={false} />
+          total hours)
         </h2>
       </div>
       {/* TODO: Better classname here */}
